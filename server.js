@@ -17,9 +17,8 @@ const torOptions = {
   port: 9051,
   host: '127.0.0.1'
 };
-
+const control = new TorControl(torOptions);
 function rotateTorIP() {
-  const control = new TorControl(torOptions);
   return new Promise((resolve, reject) => {
     control.signalNewnym((err) => {
       if (err) {
@@ -110,8 +109,16 @@ app.post('/download', async (req, res) => {
       }
 
       if (htmlContent.includes('wrongHash')) {
-        console.warn('[SERVER] Wrong hash detected in HTML.');
-        return res.status(400).json({ error: 'WRONG_HASH', message: 'Wrong hash' });
+        console.warn('[SERVER] Wrong hash detected in HTML. Re-scraping for new link...');
+        const newDownloadPath = await getFreshDownloadPath(bookTitle, bookId);
+        if (!newDownloadPath) {
+          console.error('[SERVER] Failed to get new download path due to wrong hash.');
+          return res.status(404).json({ error: 'Fresh download path not found due to wrong hash.' });
+        }
+
+        url = `https://1lib.sk${newDownloadPath}`;
+        console.log(`[SERVER] Retrying download from new URL due to wrong hash: ${url}`);
+        response = await attemptDownload(url);
       }
     }
 
