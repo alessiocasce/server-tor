@@ -87,7 +87,7 @@ app.post('/download', async (req, res) => {
 
   try {
     let response = await attemptDownload(url);
-    const contentType = response.headers['content-type'] || '';
+    let contentType = response.headers['content-type'] || '';
 
     if (contentType.includes('text/html')) {
       const htmlContent = response.data.toString('utf-8');
@@ -95,17 +95,7 @@ app.post('/download', async (req, res) => {
       if (htmlContent.includes('24 hours')) {
         console.log('[SERVER] IP block detected! Rotating IP...');
         await rotateTorIP();
-        console.log('[SERVER] Re-scraping to get a fresh download link...');
-
-        const newDownloadPath = await getFreshDownloadPath(bookTitle, bookId);
-        if (!newDownloadPath) {
-          console.error('[SERVER] Failed to get new download path after rotating IP.');
-          return res.status(404).json({ error: 'Fresh download path not found.' });
-        }
-
-        url = `https://1lib.sk${newDownloadPath}`;
-        console.log(`[SERVER] Retrying download from new URL: ${url}`);
-        response = await attemptDownload(url);
+        return res.status(429).json({ error: 'IP changed, try again' });
       }
 
       if (htmlContent.includes('wrongHash')) {
@@ -119,6 +109,16 @@ app.post('/download', async (req, res) => {
         url = `https://1lib.sk${newDownloadPath}`;
         console.log(`[SERVER] Retrying download from new URL due to wrong hash: ${url}`);
         response = await attemptDownload(url);
+        contentType = response.headers['content-type'] || '';
+
+        if (contentType.includes('text/html')) {
+          const retryHtml = response.data.toString('utf-8');
+          if (retryHtml.includes('24 hours')) {
+            console.log('[SERVER] IP block detected after wrongHash! Rotating IP...');
+            await rotateTorIP();
+            return res.status(429).json({ error: 'IP changed, try again' });
+          }
+        }
       }
     }
 
