@@ -5,7 +5,7 @@ const app = express();
 const TorControl = require('tor-control');
 
 const torOptions = {
-  password: 'tor_password',  // Must match what you used above
+  password: 'password1234',  // Must match what you used above
   port: 9051,
   host: '127.0.0.1'
 };
