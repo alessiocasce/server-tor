@@ -8,8 +8,8 @@ async function scrapeBooks(bookName) {
     const url = `https://1lib.sk/s/${bookName}`;
     console.log(url)
     const response = await axios.get(url, {
-      //httpAgent: torProxy,
-      //httpsAgent: torProxy,
+      httpAgent: torProxy,
+      httpsAgent: torProxy,
       headers: {
         'User-Agent': 'curl/8.12.1',
 	'Accept': '*/*',

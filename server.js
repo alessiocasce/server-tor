@@ -77,8 +77,8 @@ app.post('/download', async (req, res) => {
     console.log(`[SERVER] Downloading from: ${url}`);
     // Make the request to download the file, following redirects
     const response = await axios.get(url, {
-      //httpAgent: torProxy,
-      //httpsAgent: torProxy,
+      httpAgent: torProxy,
+      httpsAgent: torProxy,
       headers: {
         'User-Agent': customUserAgent,
         'Accept': '*/*',
